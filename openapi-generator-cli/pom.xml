@@ -7,7 +7,7 @@
     <groupId>openpitools</groupId>
     <artifactId>openapi-generator-patched</artifactId>
     <packaging>jar</packaging>
-    <version>1.0.8</version>
+    <version>1.1.2</version>
     
     <build>
         <plugins>
@@ -48,13 +48,13 @@
         <dependency>
             <groupId>org.openapitools</groupId>
             <artifactId>openapi-generator-cli</artifactId>
-            <version>4.3.1</version>
+            <version>5.0.0</version>
         </dependency>
         
         <dependency>
             <groupId>com.bluetrainsoftware.maven</groupId>
             <artifactId>openapi-dart-generator</artifactId>
-            <version>3.9</version>
+            <version>4.2-SNAPSHOT</version>
         </dependency>        
     </dependencies>
 </project>
