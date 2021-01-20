@@ -60,11 +60,12 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
 
       command = appendTypeMappingCommandArgs(annotation, command, separator);
 
-      command = appendReservedWordsMappingCommandArgs(annotation, command, separator);
+      command =
+          appendReservedWordsMappingCommandArgs(annotation, command, separator);
 
       command =
           appendAdditionalPropertiesCommandArgs(annotation, command, separator);
-      
+
       command =
           appendSkipValidateSpecCommandArgs(annotation, command, separator);
 
@@ -164,8 +165,16 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
         .namedArguments
         .entries
         .forEach((entry) => {
-              additionalProperties =
-                  '$additionalProperties${additionalProperties.isEmpty ? '' : ','}${entry.key}=${entry.value.toStringValue()}'
+              if (entry.value.type.isDartCoreBool)
+                {
+                  additionalProperties =
+                      '$additionalProperties${additionalProperties.isEmpty ? '' : ','}${entry.key}=${entry.value.toBoolValue()}'
+                }
+              else
+                {
+                  additionalProperties =
+                      '$additionalProperties${additionalProperties.isEmpty ? '' : ','}${entry.key}=${entry.value.toStringValue()}'
+                }
             });
 
     if (additionalProperties != null && additionalProperties.isNotEmpty) {
@@ -187,14 +196,14 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
 
   String appendReservedWordsMappingCommandArgs(
       ConstantReader annotation, String command, String separator) {
-    var reservedWordsMappingsMap = _readFieldValueAsMap(annotation, 'reservedWordsMappings', {});
+    var reservedWordsMappingsMap =
+        _readFieldValueAsMap(annotation, 'reservedWordsMappings', {});
     if (reservedWordsMappingsMap.isNotEmpty) {
       command =
-      '$command$separator--reserved-words-mappings=${getMapAsString(reservedWordsMappingsMap)}';
+          '$command$separator--reserved-words-mappings=${getMapAsString(reservedWordsMappingsMap)}';
     }
     return command;
   }
-
 
   String getGeneratorNameFromEnum(annots.Generator generator) {
     var genName = 'dart';
@@ -248,7 +257,10 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
   }
 
   String getMapAsString(Map<dynamic, dynamic> data) {
-    return data.entries.map((entry) => '${entry.key.toStringValue()}=${entry.value.toStringValue()}').join(',');
+    return data.entries
+        .map((entry) =>
+            '${entry.key.toStringValue()}=${entry.value.toStringValue()}')
+        .join(',');
   }
 
   String _readFieldValueAsString(ConstantReader annotation, String fieldName,
