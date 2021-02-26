@@ -123,6 +123,24 @@ class AdditionalProperties {
   /// Default is false
   final bool generateNullValuesToJson;
 
+  /// Flutter wrapper to use (none|flutterw|fvm)
+  final Wrapper wrapper;
+
+  /// Set to true for generators with better support for discriminators.
+  /// (Python, Java, Go, PowerShell, C#have this enabled by default).
+  ///
+  /// true
+  /// The mapping in the discriminator includes descendent schemas that allOf
+  /// inherit from self and the discriminator mapping schemas in the OAS document.
+  ///
+  /// false
+  /// The mapping in the discriminator includes any descendent schemas that allOf
+  /// inherit from self, any oneOf schemas, any anyOf schemas, any x-discriminator-values,
+  /// and the discriminator mapping schemas in the OAS document AND Codegen validates
+  /// that oneOf and anyOf schemas contain the required discriminator and throws
+  /// an error if the discriminator is missing.
+  final bool legacyDiscriminatorBehavior;
+
   const AdditionalProperties(
       {this.allowUnicodeIdentifiers = false,
       this.ensureUniqueParams = true,
@@ -132,12 +150,14 @@ class AdditionalProperties {
       this.pubAuthorEmail,
       this.pubDescription,
       this.pubHomepage,
+      this.legacyDiscriminatorBehavior = true,
       this.pubName,
       this.pubVersion,
       this.sortModelPropertiesByRequiredFlag = true,
       this.sortParamsByRequiredFlag = true,
       this.generateNullValuesToJson = false,
-      this.sourceFolder});
+      this.sourceFolder,
+      this.wrapper = Wrapper.none});
 }
 
 class JaguarProperties extends AdditionalProperties {
@@ -171,6 +191,7 @@ class JaguarProperties extends AdditionalProperties {
             pubAuthorEmail: pubAuthorEmail,
             pubDescription: pubDescription,
             pubHomepage: pubHomepage,
+            pubName: pubName,
             pubVersion: pubVersion,
             sortModelPropertiesByRequiredFlag:
                 sortModelPropertiesByRequiredFlag,
@@ -210,6 +231,7 @@ class DioProperties extends AdditionalProperties {
             pubAuthorEmail: pubAuthorEmail,
             pubDescription: pubDescription,
             pubHomepage: pubHomepage,
+            pubName: pubName,
             pubVersion: pubVersion,
             sortModelPropertiesByRequiredFlag:
                 sortModelPropertiesByRequiredFlag,
@@ -218,8 +240,52 @@ class DioProperties extends AdditionalProperties {
             useEnumExtension: useEnumExtension);
 }
 
-enum DioDateLibrary { core, timemachine }
+enum DioDateLibrary {
+  /// Dart core library (DateTime)
+  core,
+
+  /// Time Machine is date and time library for Flutter, Web, and Server with
+  /// support for timezones, calendars, cultures, formatting and parsing.
+  timemachine
+}
 enum SerializationFormat { JSON, PROTO }
 
 /// The name of the generator to use
-enum Generator { DART, DART_DIO, DART2_API, DART_JAGUAR }
+enum Generator {
+  @Deprecated('Use Generator.dart instead')
+  DART,
+
+  @Deprecated('Use Generator.dio instead')
+  DART_DIO,
+
+  @Deprecated('Use Generator.dioAlt instead')
+  DART2_API,
+
+  @Deprecated('Use Generator.jaguar instead')
+  DART_JAGUAR,
+
+  /// This generator uses the default http package that comes with dart
+  /// corresponds to dart
+  dart,
+
+  /// This generator uses the dio package. Source gen is required after generating code with this generator
+  /// corresponds to dart-dio
+  ///
+  /// A powerful Http client for Dart, which supports Interceptors, Global configuration,
+  /// FormData, Request Cancellation, File downloading, Timeout etc
+  /// https://pub.flutter-io.cn/packages/dio
+  dio,
+
+  /// This uses the generator provided by bluetrainsoftware which internally uses the dio packaget
+  ///
+  /// You can read more about it here https://github.com/dart-ogurets/dart-openapi-maven
+  dioAlt,
+
+  /// This generates code based on the jaguar package Source gen is required
+  /// after generating code with this generator
+  /// corresponds to dart-jaguar
+  ///
+  /// An Http Api generator inspired by Retrofit for Dart
+  jaguar,
+}
+enum Wrapper { fvm, flutterw, none }
