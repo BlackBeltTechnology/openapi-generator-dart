@@ -32,21 +32,21 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
       command = appendTemplateDirCommandArgs(annotation, command, separator);
 
       var generatorName =
-          annotation.peek('generatorName').enumValue<annots.Generator>();
-      var generator = getGeneratorNameFromEnum(generatorName);
+          annotation.peek('generatorName')?.enumValue<annots.Generator>();
+      var generator = getGeneratorNameFromEnum(generatorName!);
       command = '$command$separator-g$separator$generator';
 
       var outputDirectory =
           _readFieldValueAsString(annotation, 'outputDirectory', '');
       if (outputDirectory.isNotEmpty) {
-        var alwaysRun = _readFieldValueAsBool(annotation, 'alwaysRun', false);
+        var alwaysRun = _readFieldValueAsBool(annotation, 'alwaysRun', false)!;
         var filePath = path.join(outputDirectory, 'lib/api.dart');
         if (!alwaysRun && await File(filePath).exists()) {
           print(
               'OpenapiGenerator :: Codegen skipped because alwaysRun is set to [$alwaysRun] and $filePath already exists');
           return '';
         }
-        command = '$command$separator-o$separator${outputDirectory}';
+        command = '$command$separator-o$separator$outputDirectory';
       }
 
       command = appendTypeMappingCommandArgs(annotation, command, separator);
@@ -62,8 +62,8 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
 
       print('OpenapiGenerator :: [${command.replaceAll(separator, ' ')}]');
 
-      var binPath = (await Isolate.resolvePackageUri(
-              Uri.parse('package:openapi_generator_cli/openapi-generator.jar')))
+      var binPath = (await Isolate.resolvePackageUri(Uri.parse(
+              'package:openapi_generator_cli/openapi-generator.jar')))!
           .toFilePath(windows: Platform.isWindows);
 
       // Include java environment variables in command
@@ -92,7 +92,7 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
           'OpenapiGenerator :: Codegen ${pr.exitCode != 0 ? 'Failed' : 'completed successfully'}');
       exitCode = pr.exitCode;
 
-      if (!_readFieldValueAsBool(annotation, 'fetchDependencies')) {
+      if (!_readFieldValueAsBool(annotation, 'fetchDependencies')!) {
         print(
             'OpenapiGenerator :: Skipping install step because you said so...');
         return '';
@@ -112,7 +112,7 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
         exitCode = installOutput.exitCode;
       }
 
-      if (!_readFieldValueAsBool(annotation, 'runSourceGenOnOutput')) {
+      if (!_readFieldValueAsBool(annotation, 'runSourceGenOnOutput')!) {
         print(
             'OpenapiGenerator :: Skipping source gen step because you said so...');
         return '';
@@ -121,17 +121,13 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
       if (exitCode == 0) {
         //run buildrunner to generate files
         switch (generatorName) {
-          case annots.Generator.DART:
           case annots.Generator.dart:
             print(
                 'OpenapiGenerator :: skipping source gen because generator does not need it ::');
             break;
-          case annots.Generator.DART_DIO:
           case annots.Generator.dio:
           case annots.Generator.jaguar:
-          case annots.Generator.DART2_API:
           case annots.Generator.dioAlt:
-          case annots.Generator.DART_JAGUAR:
             try {
               var runnerOutput =
                   await runSourceGen(annotation, outputDirectory);
@@ -145,7 +141,7 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
         }
       }
     } catch (e) {
-      print('Error generating spec ${e}');
+      print('Error generating spec $e');
       rethrow;
     }
     return '';
@@ -173,7 +169,7 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
         .namedArguments
         .entries
         .forEach((entry) => {
-              if (entry.value.type.isDartCoreBool)
+              if (entry.value.type!.isDartCoreBool)
                 {
                   additionalProperties =
                       '$additionalProperties${additionalProperties.isEmpty ? '' : ','}${entry.key}=${entry.value.toBoolValue()}'
@@ -185,16 +181,16 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
                 }
             });
 
-    if (additionalProperties != null && additionalProperties.isNotEmpty) {
+    if (additionalProperties.isNotEmpty) {
       command =
-          '$command$separator--additional-properties=${additionalProperties}';
+          '$command$separator--additional-properties=$additionalProperties';
     }
     return command;
   }
 
   String appendTypeMappingCommandArgs(
       ConstantReader annotation, String command, String separator) {
-    var typeMappingsMap = _readFieldValueAsMap(annotation, 'typeMappings', {});
+    var typeMappingsMap = _readFieldValueAsMap(annotation, 'typeMappings', {})!;
     if (typeMappingsMap.isNotEmpty) {
       command =
           '$command$separator--type-mappings=${getMapAsString(typeMappingsMap)}';
@@ -205,7 +201,7 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
   String appendReservedWordsMappingCommandArgs(
       ConstantReader annotation, String command, String separator) {
     var reservedWordsMappingsMap =
-        _readFieldValueAsMap(annotation, 'reservedWordsMappings', {});
+        _readFieldValueAsMap(annotation, 'reservedWordsMappings', {})!;
     if (reservedWordsMappingsMap.isNotEmpty) {
       command =
           '$command$separator--reserved-words-mappings=${getMapAsString(reservedWordsMappingsMap)}';
@@ -216,29 +212,20 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
   String getGeneratorNameFromEnum(annots.Generator generator) {
     var genName = 'dart';
     switch (generator) {
-      case annots.Generator.DART:
       case annots.Generator.dart:
         break;
-      case annots.Generator.DART_DIO:
       case annots.Generator.dio:
         genName = 'dart-dio';
         break;
-      case annots.Generator.DART2_API:
       case annots.Generator.dioAlt:
         genName = 'dart2-api';
         break;
-      case annots.Generator.DART_JAGUAR:
       case annots.Generator.jaguar:
         genName = 'dart-jaguar';
         break;
       default:
         throw InvalidGenerationSourceError(
-          'Generator name must be any of ${annots.Generator.values.where((value) => ![
-                annots.Generator.DART,
-                annots.Generator.DART_DIO,
-                annots.Generator.DART2_API,
-                annots.Generator.DART_JAGUAR
-              ].contains(value)).toList()}.',
+          'Generator name must be any of ${annots.Generator.values}.',
         );
     }
     return genName;
@@ -249,7 +236,7 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
     var templateDir =
         _readFieldValueAsString(annotation, 'templateDirectory', '');
     if (templateDir.isNotEmpty) {
-      command = '$command$separator-t$separator${templateDir}';
+      command = '$command$separator-t$separator$templateDir';
     }
     return command;
   }
@@ -258,7 +245,7 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
       ConstantReader annotation, String command, String separator) {
     var inputFile = _readFieldValueAsString(annotation, 'inputSpecFile', '');
     if (inputFile.isNotEmpty) {
-      command = '$command$separator-i$separator${inputFile}';
+      command = '$command$separator-i$separator$inputFile';
     }
     return command;
   }
@@ -266,7 +253,7 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
   String appendSkipValidateSpecCommandArgs(
       ConstantReader annotation, String command, String separator) {
     var skipSpecValidation =
-        _readFieldValueAsBool(annotation, 'skipSpecValidation', false);
+        _readFieldValueAsBool(annotation, 'skipSpecValidation', false)!;
     if (skipSpecValidation) {
       command = '$command$separator--skip-validate-spec';
     }
@@ -283,10 +270,9 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
   Command _getCommandWithWrapper(
       String command, List<String> arguments, ConstantReader annotation) {
     final wrapper = annotation
-            .read('additionalProperties')
-            ?.read('wrapper')
-            ?.enumValue<annots.Wrapper>() ??
-        annots.Wrapper.none;
+        .read('additionalProperties')
+        .read('wrapper')
+        .enumValue<annots.Wrapper>();
     switch (wrapper) {
       case annots.Wrapper.flutterw:
         return Command('./flutterw', arguments);
@@ -298,25 +284,25 @@ class OpenapiGenerator extends GeneratorForAnnotation<annots.Openapi> {
     }
   }
 
-  String _readFieldValueAsString(ConstantReader annotation, String fieldName,
-      [String defaultValue]) {
+  String _readFieldValueAsString(
+      ConstantReader annotation, String fieldName, String defaultValue) {
     var reader = annotation.read(fieldName);
 
-    return reader.isNull ? defaultValue : reader.stringValue ?? defaultValue;
+    return reader.isNull ? defaultValue : reader.stringValue;
   }
 
-  Map _readFieldValueAsMap(ConstantReader annotation, String fieldName,
-      [Map defaultValue]) {
+  Map? _readFieldValueAsMap(ConstantReader annotation, String fieldName,
+      [Map? defaultValue]) {
     var reader = annotation.read(fieldName);
 
-    return reader.isNull ? defaultValue : reader.mapValue ?? defaultValue;
+    return reader.isNull ? defaultValue : reader.mapValue;
   }
 
-  bool _readFieldValueAsBool(ConstantReader annotation, String fieldName,
-      [bool defaultValue]) {
+  bool? _readFieldValueAsBool(ConstantReader annotation, String fieldName,
+      [bool? defaultValue]) {
     var reader = annotation.read(fieldName);
 
-    return reader.isNull ? defaultValue : reader.boolValue ?? defaultValue;
+    return reader.isNull ? defaultValue : reader.boolValue;
   }
 }
 
